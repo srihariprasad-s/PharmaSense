@@ -1,0 +1,20 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "6Im87Fp6TvU9Br8LohbOR"
+uri = "file://attached_assets/PharmaSense_Documentation_Updated.md"
+type = "text"
+title = "PharmaSense — Updated Project Documentation"
+
+[[outputs]]
+id = "ga6uDpxs1cLuv6ngXkYM2"
+uri = "file://attached_assets/PharmaSense_Final_Documentation.md"
+type = "text"
+title = "PharmaSense — Full Documentation (Paragraph Form, 50 Pages)"
+
+[[outputs]]
+id = "BA7wmHPfIbVn5rFKmRZrG"
+uri = "file://attached_assets/PharmaSense_5_Modules.md"
+type = "text"
+title = "PharmaSense — 5 Combined Major Modules (7.2 Module Description)"

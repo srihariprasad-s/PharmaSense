@@ -1,0 +1,1303 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: MediConnect API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: auth
+    description: Authentication operations
+  - name: doctors
+    description: Doctor operations
+  - name: patients
+    description: Patient operations
+  - name: consultations
+    description: Consultation operations
+  - name: admin
+    description: Admin operations
+  - name: notifications
+    description: Notification operations
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /auth/register/patient:
+    post:
+      operationId: registerPatient
+      tags: [auth]
+      summary: Register a new patient
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatientRegisterRequest"
+      responses:
+        "201":
+          description: Patient registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Email already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/register/doctor:
+    post:
+      operationId: registerDoctor
+      tags: [auth]
+      summary: Register a new doctor and verify with NMC
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DoctorRegisterRequest"
+      responses:
+        "201":
+          description: Doctor registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DoctorRegisterResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      responses:
+        "200":
+          description: Current user info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /doctors/profile:
+    put:
+      operationId: updateDoctorProfile
+      tags: [doctors]
+      summary: Update doctor profile (specialization, language, region, experience)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DoctorProfileUpdateRequest"
+      responses:
+        "200":
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DoctorProfile"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /doctors/availability:
+    put:
+      operationId: updateAvailability
+      tags: [doctors]
+      summary: Toggle doctor online/availability status
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AvailabilityUpdateRequest"
+      responses:
+        "200":
+          description: Availability updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /doctors/search:
+    get:
+      operationId: searchDoctors
+      tags: [doctors]
+      summary: Search doctors by symptom/specialty
+      parameters:
+        - name: symptom
+          in: query
+          schema:
+            type: string
+        - name: specialty
+          in: query
+          schema:
+            type: string
+        - name: language
+          in: query
+          schema:
+            type: string
+        - name: region
+          in: query
+          schema:
+            type: string
+        - name: onlineOnly
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: List of doctors
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DoctorSearchResult"
+
+  /doctors/{id}:
+    get:
+      operationId: getDoctorById
+      tags: [doctors]
+      summary: Get doctor details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Doctor details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DoctorProfile"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /doctors/notifications:
+    get:
+      operationId: getDoctorNotifications
+      tags: [doctors]
+      summary: Get consultation requests for doctor
+      responses:
+        "200":
+          description: Consultation requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ConsultationRequest"
+
+  /patients/profile:
+    get:
+      operationId: getPatientProfile
+      tags: [patients]
+      summary: Get patient profile
+      responses:
+        "200":
+          description: Patient profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PatientProfile"
+
+    put:
+      operationId: updatePatientProfile
+      tags: [patients]
+      summary: Update patient profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatientProfileUpdateRequest"
+      responses:
+        "200":
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PatientProfile"
+
+  /patients/consultations:
+    get:
+      operationId: getPatientConsultations
+      tags: [patients]
+      summary: Get all consultations for a patient
+      responses:
+        "200":
+          description: Patient consultations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ConsultationSummary"
+
+  /patients/records:
+    get:
+      operationId: getPatientRecords
+      tags: [patients]
+      summary: Get all medical records for patient
+      responses:
+        "200":
+          description: Medical records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MedicalRecord"
+
+  /consultations/request:
+    post:
+      operationId: createConsultationRequest
+      tags: [consultations]
+      summary: Patient requests consultation with a doctor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConsultationRequestCreate"
+      responses:
+        "201":
+          description: Consultation request created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConsultationRequest"
+
+  /consultations/{id}/respond:
+    put:
+      operationId: respondToConsultation
+      tags: [consultations]
+      summary: Doctor accepts/rejects consultation request
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConsultationResponseRequest"
+      responses:
+        "200":
+          description: Response recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConsultationRequest"
+
+  /consultations/{id}/payment:
+    post:
+      operationId: createPayment
+      tags: [consultations]
+      summary: Create payment for accepted consultation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Payment session created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentResponse"
+
+  /consultations/{id}/payment/confirm:
+    post:
+      operationId: confirmPayment
+      tags: [consultations]
+      summary: Confirm sandbox payment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Payment confirmed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /consultations/{id}:
+    get:
+      operationId: getConsultation
+      tags: [consultations]
+      summary: Get consultation details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Consultation details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConsultationDetail"
+
+  /consultations/{id}/complete:
+    put:
+      operationId: completeConsultation
+      tags: [consultations]
+      summary: Doctor marks consultation complete
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Consultation completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /consultations/{id}/prescription:
+    post:
+      operationId: sendPrescription
+      tags: [consultations]
+      summary: Doctor sends prescription/document to patient
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PrescriptionCreate"
+      responses:
+        "201":
+          description: Prescription sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Prescription"
+
+  /consultations/{id}/medication:
+    post:
+      operationId: sendMedication
+      tags: [consultations]
+      summary: Doctor sends medication order
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MedicationCreate"
+      responses:
+        "201":
+          description: Medication order created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MedicationOrder"
+
+  /consultations/{id}/medication/{medId}/status:
+    put:
+      operationId: updateMedicationStatus
+      tags: [consultations]
+      summary: Update medication delivery status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: medId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MedicationStatusUpdate"
+      responses:
+        "200":
+          description: Status updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MedicationOrder"
+
+  /admin/doctors/pending:
+    get:
+      operationId: getPendingDoctors
+      tags: [admin]
+      summary: Get all pending doctor verifications
+      responses:
+        "200":
+          description: Pending doctors
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PendingDoctor"
+
+  /admin/doctors/{id}/approve:
+    put:
+      operationId: approveDoctor
+      tags: [admin]
+      summary: Approve a doctor
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Doctor approved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /admin/doctors/{id}/reject:
+    put:
+      operationId: rejectDoctor
+      tags: [admin]
+      summary: Reject a doctor
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RejectRequest"
+      responses:
+        "200":
+          description: Doctor rejected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /admin/stats:
+    get:
+      operationId: getAdminStats
+      tags: [admin]
+      summary: Get admin dashboard stats
+      responses:
+        "200":
+          description: Stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminStats"
+
+  /webrtc/token:
+    post:
+      operationId: getWebRtcToken
+      tags: [consultations]
+      summary: Get WebRTC room token for a consultation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WebRtcTokenRequest"
+      responses:
+        "200":
+          description: WebRTC token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebRtcTokenResponse"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+      required:
+        - error
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+      required:
+        - success
+
+    PatientRegisterRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        phone:
+          type: string
+        dateOfBirth:
+          type: string
+        gender:
+          type: string
+        language:
+          type: string
+        region:
+          type: string
+      required:
+        - name
+        - email
+        - password
+
+    DoctorRegisterRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        phone:
+          type: string
+        registrationNumber:
+          type: string
+        fatherName:
+          type: string
+        year:
+          type: string
+        stateCouncil:
+          type: string
+      required:
+        - name
+        - email
+        - password
+        - registrationNumber
+        - fatherName
+        - year
+        - stateCouncil
+
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+      required:
+        - email
+        - password
+
+    AuthResponse:
+      type: object
+      properties:
+        userId:
+          type: integer
+        role:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        token:
+          type: string
+      required:
+        - userId
+        - role
+        - name
+        - email
+
+    DoctorRegisterResponse:
+      type: object
+      properties:
+        userId:
+          type: integer
+        nmcVerified:
+          type: boolean
+        verificationStatus:
+          type: string
+        message:
+          type: string
+      required:
+        - userId
+        - nmcVerified
+        - verificationStatus
+        - message
+
+    MeResponse:
+      type: object
+      properties:
+        userId:
+          type: integer
+        role:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        verificationStatus:
+          type: string
+        isOnline:
+          type: boolean
+        profileComplete:
+          type: boolean
+        doctorId:
+          type: integer
+        patientId:
+          type: integer
+      required:
+        - userId
+        - role
+        - name
+        - email
+
+    DoctorProfileUpdateRequest:
+      type: object
+      properties:
+        specialty:
+          type: string
+        subSpecialty:
+          type: string
+        languages:
+          type: array
+          items:
+            type: string
+        regions:
+          type: array
+          items:
+            type: string
+        experience:
+          type: integer
+        education:
+          type: string
+        bio:
+          type: string
+        consultationFee:
+          type: number
+        symptoms:
+          type: array
+          items:
+            type: string
+
+    AvailabilityUpdateRequest:
+      type: object
+      properties:
+        isOnline:
+          type: boolean
+      required:
+        - isOnline
+
+    DoctorProfile:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        registrationNumber:
+          type: string
+        stateCouncil:
+          type: string
+        specialty:
+          type: string
+        subSpecialty:
+          type: string
+        languages:
+          type: array
+          items:
+            type: string
+        regions:
+          type: array
+          items:
+            type: string
+        experience:
+          type: integer
+        education:
+          type: string
+        bio:
+          type: string
+        consultationFee:
+          type: number
+        isOnline:
+          type: boolean
+        verificationStatus:
+          type: string
+        symptoms:
+          type: array
+          items:
+            type: string
+        rating:
+          type: number
+        totalConsultations:
+          type: integer
+      required:
+        - id
+        - userId
+        - name
+
+    DoctorSearchResult:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        name:
+          type: string
+        specialty:
+          type: string
+        subSpecialty:
+          type: string
+        languages:
+          type: array
+          items:
+            type: string
+        regions:
+          type: array
+          items:
+            type: string
+        experience:
+          type: integer
+        consultationFee:
+          type: number
+        isOnline:
+          type: boolean
+        rating:
+          type: number
+        totalConsultations:
+          type: integer
+        isSameRegion:
+          type: boolean
+        isSameLanguage:
+          type: boolean
+      required:
+        - id
+        - name
+
+    PatientProfile:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        dateOfBirth:
+          type: string
+        gender:
+          type: string
+        language:
+          type: string
+        region:
+          type: string
+        bloodGroup:
+          type: string
+        allergies:
+          type: string
+        medicalHistory:
+          type: string
+      required:
+        - id
+        - userId
+        - name
+        - email
+
+    PatientProfileUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        dateOfBirth:
+          type: string
+        gender:
+          type: string
+        language:
+          type: string
+        region:
+          type: string
+        bloodGroup:
+          type: string
+        allergies:
+          type: string
+        medicalHistory:
+          type: string
+
+    ConsultationRequestCreate:
+      type: object
+      properties:
+        doctorId:
+          type: integer
+        symptoms:
+          type: string
+        notes:
+          type: string
+      required:
+        - doctorId
+        - symptoms
+
+    ConsultationResponseRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [accepted, rejected]
+        reason:
+          type: string
+      required:
+        - status
+
+    ConsultationRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+        patientId:
+          type: integer
+        doctorId:
+          type: integer
+        symptoms:
+          type: string
+        notes:
+          type: string
+        status:
+          type: string
+        reason:
+          type: string
+        createdAt:
+          type: string
+        patientName:
+          type: string
+        patientPhone:
+          type: string
+        patientLanguage:
+          type: string
+        patientRegion:
+          type: string
+        patientMedicalHistory:
+          type: string
+        patientAllergies:
+          type: string
+        previousConsultations:
+          type: integer
+      required:
+        - id
+        - patientId
+        - doctorId
+        - symptoms
+        - status
+
+    ConsultationSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+        doctorId:
+          type: integer
+        doctorName:
+          type: string
+        specialty:
+          type: string
+        symptoms:
+          type: string
+        status:
+          type: string
+        paymentStatus:
+          type: string
+        createdAt:
+          type: string
+        completedAt:
+          type: string
+      required:
+        - id
+        - status
+
+    ConsultationDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+        patientId:
+          type: integer
+        doctorId:
+          type: integer
+        symptoms:
+          type: string
+        notes:
+          type: string
+        status:
+          type: string
+        paymentStatus:
+          type: string
+        roomId:
+          type: string
+        createdAt:
+          type: string
+        completedAt:
+          type: string
+        doctor:
+          $ref: "#/components/schemas/DoctorProfile"
+        patient:
+          $ref: "#/components/schemas/PatientProfile"
+        prescriptions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Prescription"
+        medications:
+          type: array
+          items:
+            $ref: "#/components/schemas/MedicationOrder"
+      required:
+        - id
+        - status
+
+    PaymentResponse:
+      type: object
+      properties:
+        consultationId:
+          type: integer
+        amount:
+          type: number
+        currency:
+          type: string
+        sessionId:
+          type: string
+        message:
+          type: string
+      required:
+        - consultationId
+        - amount
+        - currency
+
+    PrescriptionCreate:
+      type: object
+      properties:
+        content:
+          type: string
+        documentUrl:
+          type: string
+        notes:
+          type: string
+      required:
+        - content
+
+    Prescription:
+      type: object
+      properties:
+        id:
+          type: integer
+        consultationId:
+          type: integer
+        content:
+          type: string
+        documentUrl:
+          type: string
+        notes:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - consultationId
+        - content
+
+    MedicationCreate:
+      type: object
+      properties:
+        medications:
+          type: array
+          items:
+            type: string
+        instructions:
+          type: string
+        pharmacyName:
+          type: string
+      required:
+        - medications
+
+    MedicationOrder:
+      type: object
+      properties:
+        id:
+          type: integer
+        consultationId:
+          type: integer
+        medications:
+          type: array
+          items:
+            type: string
+        instructions:
+          type: string
+        pharmacyName:
+          type: string
+        deliveryStatus:
+          type: string
+          enum: [pending, processing, shipped, delivered]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - consultationId
+        - medications
+        - deliveryStatus
+
+    MedicationStatusUpdate:
+      type: object
+      properties:
+        deliveryStatus:
+          type: string
+          enum: [pending, processing, shipped, delivered]
+      required:
+        - deliveryStatus
+
+    MedicalRecord:
+      type: object
+      properties:
+        id:
+          type: integer
+        consultationId:
+          type: integer
+        doctorName:
+          type: string
+        specialty:
+          type: string
+        symptoms:
+          type: string
+        prescriptions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Prescription"
+        medications:
+          type: array
+          items:
+            $ref: "#/components/schemas/MedicationOrder"
+        date:
+          type: string
+      required:
+        - id
+        - consultationId
+
+    PendingDoctor:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        registrationNumber:
+          type: string
+        fatherName:
+          type: string
+        year:
+          type: string
+        stateCouncil:
+          type: string
+        nmcVerified:
+          type: boolean
+        verificationStatus:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - name
+        - registrationNumber
+        - verificationStatus
+
+    RejectRequest:
+      type: object
+      properties:
+        reason:
+          type: string
+      required:
+        - reason
+
+    AdminStats:
+      type: object
+      properties:
+        totalDoctors:
+          type: integer
+        pendingVerifications:
+          type: integer
+        totalPatients:
+          type: integer
+        totalConsultations:
+          type: integer
+        activeConsultations:
+          type: integer
+      required:
+        - totalDoctors
+        - pendingVerifications
+        - totalPatients
+        - totalConsultations
+        - activeConsultations
+
+    WebRtcTokenRequest:
+      type: object
+      properties:
+        consultationId:
+          type: integer
+        role:
+          type: string
+          enum: [doctor, patient]
+      required:
+        - consultationId
+        - role
+
+    WebRtcTokenResponse:
+      type: object
+      properties:
+        roomId:
+          type: string
+        token:
+          type: string
+        appId:
+          type: string
+      required:
+        - roomId
+        - token

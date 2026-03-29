@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: nmc-verify-proxy
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node proxy.js
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production

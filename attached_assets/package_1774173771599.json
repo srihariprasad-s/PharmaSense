@@ -1,0 +1,16 @@
+{
+  "name": "nmc-verify-proxy",
+  "version": "1.0.0",
+  "description": "Proxy server for NMC Indian Medical Register verification",
+  "main": "proxy.js",
+  "scripts": {
+    "start": "node proxy.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

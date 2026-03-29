@@ -1,0 +1,21 @@
+packages:
+  "framer-motion": "For page transitions and smooth micro-interactions"
+  "react-hook-form": "For robust form state management"
+  "@hookform/resolvers": "For Zod validation integration with forms"
+  "zod": "For form validation schemas"
+  "date-fns": "For formatting consultation dates and times"
+  "clsx": "For conditional tailwind classes"
+  "tailwind-merge": "For merging tailwind classes safely"
+
+images:
+  - path: "artifacts/mediconnect/public/images/hero-medical.png"
+    description: "A bright, clean, abstract modern medical background with soft light blue and teal gradients, subtle geometric shapes implying connection and healthcare, highly professional, 8k resolution"
+    aspect_ratio: "16:9"
+  - path: "artifacts/mediconnect/public/images/doctor-illustration.png"
+    description: "A sleek, modern 3D illustration of a friendly doctor avatar with a stethoscope, using soft blues and white, clean corporate tech style"
+    aspect_ratio: "1:1"
+
+notes:
+  - Using generated hooks from @workspace/api-client-react
+  - Simulating WebRTC video locally for the consultation room as signaling isn't in backend spec
+  - Assuming standard JWT/Session cookie auth is handled by backend on /api/auth/login
